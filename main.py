@@ -20,8 +20,6 @@ torch.cuda.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 np.random.seed(seed)
 random.seed(seed)
-def l2_norm(x):
-    return torch.norm(x, p=2)
 
 csv_file = './dataset/di.csv'
 ser_di = pd.read_csv(csv_file)
@@ -139,7 +137,8 @@ def train():
     weight1 = weight1 / total_weight
     weight2 = weight2 / total_weight
     weight3 = weight3 / total_weight
-    loss = weight1 * loss1 + weight2 * loss2 *0.5 + weight3 * loss3*0.5
+    #You can freely adjust the loss value calculation of the multi-task part here.
+    loss = loss1
     loss.backward()
     optimizer.step()
     return loss
@@ -171,16 +170,10 @@ def test(data):
     optimal_idx = np.argmax(tpr - fpr)
     optimal_threshold = thresholds[optimal_idx]
     y_pred_new = (y_pred >= optimal_threshold).astype(int)
-    mat = confusion_matrix(y_true, y_pred_new)
-    tp = float(mat[0][0])
-    fp = float(mat[1][0])
-    fn = float(mat[0][1])
-    tn = float(mat[1][1])
     f1 = f1_score(y_true, y_pred_new)
     roc_auc = roc_auc_score(y_true, y_pred)
     avg_precision = average_precision_score(y_true, y_pred)
-    ndcg = NDCG(y_true, y_pred)
-    return f1, roc_auc, avg_precision, ndcg,accuracy,accuracy_sub,tp,fp,fn,tn
+    return f1, roc_auc, avg_precision
 
 
 best_epoches = []
@@ -261,7 +254,7 @@ for train_index, val_index in kfold.split(node_table):
     train_data = transform(train_data)
     val_data = transform(val_data)
     model = DVMNet(train_data.num_features, 128, 64).to(device)
-    optimizer = torch.optim.Adam(params=model.parameters(), lr=0.002)
+    optimizer = torch.optim.Adam(params=model.parameters(), lr=0.0008)
     criterion = torch.nn.BCEWithLogitsLoss()
     criterion2 = torch.nn.CrossEntropyLoss()
     # Train and Validation
@@ -273,28 +266,12 @@ for train_index, val_index in kfold.split(node_table):
     loss_history1 = []
     loss_history2 = []
     loss_history3 = []
-    alpha = 1.0
     T = 10
 
     for epoch in range(1, 20):
         loss = train()
-        val_f1, val_auc, val_ap, val_ndcg,val_acc_di,val_acc_sub,tp,fp,fn,tn = test(val_data)
-        print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Val: {val_auc:.4f}, di: {val_acc_di:.4f}, sub: {val_acc_sub:.4f}')
-        results.append([epoch, val_f1, val_auc, val_ap, val_ndcg])
-        diACC.append(val_acc_di)
-        subACC.append(val_acc_sub)
-    best_result = max(results, key=lambda x: x[2])
-    best_acc_di =  max(diACC)
-    best_acc_sub = max(subACC)
-    log_and_print('Best result: Epoch: {}, F1: {:.3f}, AUC: {:.3f}, AP: {:.3f}, NDCG: {:.3f}'.format(
-        *best_result))
-    print("best_acc_di:",best_acc_di)
-    print("best_acc_sub:", best_acc_sub)
-    best_epoches.append(best_result[0])
-    f1_scores.append(best_result[1])
-    auc_scores.append(best_result[2])
-    ap_scores.append(best_result[3])
-    ndcg_scores.append(best_result[4])
-    di_scores.append(best_acc_di)
+        val_f1, val_auc, val_ap = test(val_data)
+        print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Val: {val_auc:.4f}')
+        results.append([epoch, val_f1, val_auc, val_ap])
 
 
