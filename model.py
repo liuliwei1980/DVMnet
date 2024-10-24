@@ -28,6 +28,8 @@ class DVMNet(torch.nn.Module):
         self.x_gat_lnc2 = nn.Linear(64, 100)
         self.x_gat_mi1 = nn.Linear(30, 1)
         self.x_gat_mi2 = nn.Linear(16, 100)
+        self.Dropout1 = nn.Dropout(p=0.1)
+        self.Dropout2 = nn.Dropout(p=0.1)
 
     def mainNet(self, x, x_lnc, x_mi, edge_index, xname, edge_label_index, di,sub):
         node_mi = self.mer_x(2).cuda(0)
@@ -77,6 +79,7 @@ class DVMNet(torch.nn.Module):
         di_x = x[indices]
         di_x = self.dilin1(di_x)
         di_x = self.relu(di_x)
+        di_x = self.Dropout1(di_x)
         di_x = self.dilin2(di_x)
         di_x = self.sig(di_x)
         #task3
@@ -89,6 +92,7 @@ class DVMNet(torch.nn.Module):
         sub_x = x[subindices]
         sub_x = self.sublin1(sub_x)
         sub_x = self.relu(sub_x)
+        sub_x = self.Dropout2(sub_x)
         sub_x = self.sublin2(sub_x)
         sub_x = self.sig(sub_x)
         return out, di_x, di_out,sub_x,sub_out
