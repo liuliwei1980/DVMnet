@@ -1,12 +1,5 @@
-
+# DVMnet
 Dual-view multitask learning for predicting lncRNA and miRNA related properties and interactions using improved de bruijn graph and heterogeneous graph
-
-# data：
-mirna_lncrna_interaction.csv
-di.csv
-sub.csv
-index_value.csv
-node_link.csv
 
 # Requirements
 python                    3.8.10
@@ -19,7 +12,8 @@ torchvision               0.12.0+cu113
 # Usage
 If you use the default dataset, simply running the main.py file will suffice.
 
-If you are using your own dataset, first call the de_bruijn_graph method in de_graph.py from within the main.py file to obtain the improved De Bruijn graph, and save it as a pkl file.
+If you want to construct an improved de Bruijn graph on your own, there is commented code in the main.py file. By running the following code, you can construct the improved de Bruijn graph for this dataset. If you wish to construct an improved de Bruijn graph using your own dataset, you can also adopt this strategy.
+de_vectors_lnc = de_bruijn_graph(lnc_seq,unique_lnc,3)
+de_vectors_lnc = de_bruijn_graph(mi_seq,unique_mi,2)
 
 Thank you and enjoy the tool!
-# DVMnet
